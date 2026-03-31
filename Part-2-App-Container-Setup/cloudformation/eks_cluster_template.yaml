@@ -1,0 +1,159 @@
+AWSTemplateFormatVersion: '2010-09-09'    
+Description: Eks cluster and SSM bastion host stack 
+
+Parameters:
+  ClusterName:
+    Description: Name of the eks cluster
+    Type: String
+    Default: my-eks-cluster
+  ClusterVersion:
+    Description: Version of the cluster
+    Type: String
+    Default: 1.35
+  BastionInstanceType:
+    Description: Instance type for bastion host
+    Type: String
+    Default: t3.micro
+  VpcId:
+    Description: VPC ID 
+    Type: AWS::EC2::VPC::Id
+  PrivateSubnets:
+    Description: private subnet
+    Type: List<AWS::EC2::Subnet::Id>
+  BastionSubnetId:
+    Description: Subnet for the bastion host
+    Type: AWS::EC2::Subnet::Id
+# ----------------------------------------------------------------------------------------
+
+Resources:
+  SsmBastionHostSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: SSM Bastion host (no inbound; outbound via NAT)
+      VpcId: !Ref VpcId
+      SecurityGroupIngress: [] # no inbound traffic
+      SecurityGroupEgress:
+      - IpProtocol: -1
+        CidrIp: 0.0.0.0/0   # allow all outbound traffic via NAT
+      Tags:
+        - Key: Name
+          Value: ssm-bastion-sg
+
+  SsmIamRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: mtier-ssm-role
+      Description: IAM role that allows you to use SSM to communication with Kubernetes cluster 
+      AssumeRolePolicyDocument: 
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ec2.amazonaws.com
+            Action: sts:AssumeRole 
+      ManagedPolicyArns: 
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+      Policies:
+        - PolicyName: mtier-eks-describecluster
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - eks:DescribeCluster 
+                Resource: "*"
+      Tags: 
+        - Key: Name
+          Value: mtier-ssm-role
+  
+  SsmInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Roles: 
+        - !Ref SsmIamRole
+
+  SsmBastionHostInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: ami-0157af9aea2eef346
+      InstanceType: !Ref BastionInstanceType
+      IamInstanceProfile: !Ref SsmInstanceProfile
+      SubnetId: !Ref BastionSubnetId
+      SecurityGroupIds:
+        - !Ref SsmBastionHostSG
+      Tags:
+        - Key: Name 
+          Value: mtier-bastion-host
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          set -e
+          # Install kubectl (latest stable)
+          curl -LO https://dl.k8s.io/release/$(curl -Ls https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl
+          install -m 0755 kubectl /usr/local/bin/kubectl
+          rm -f kubectl
+
+  EksClusterSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Eks security group (Cluster)
+      VpcId: !Ref VpcId
+      SecurityGroupIngress: 
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          SourceSecurityGroupId: !Ref SsmBastionHostSG
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: !ImportValue mtier:VpcCidr
+
+
+
+  EksIamRole:
+      Type: AWS::IAM::Role
+      Properties:
+        RoleName: eks-role
+        Description: IAM role for EKS control plane 
+        AssumeRolePolicyDocument: 
+          Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service: eks.amazonaws.com
+              Action: sts:AssumeRole
+        Path: "/"
+        ManagedPolicyArns: 
+            - arn:aws:iam::aws:policy/AmazonEKSClusterPolicy
+
+  EksCluster:
+      Type: AWS::EKS::Cluster
+      Properties:
+        Name: !Ref ClusterName
+        Version: !Ref ClusterVersion
+        RoleArn: !GetAtt EksIamRole.Arn
+        AccessConfig:
+            AuthenticationMode: API_AND_CONFIG_MAP
+        ResourcesVpcConfig:
+          SubnetIds: !Ref PrivateSubnets
+          SecurityGroupIds:
+            - !Ref EksClusterSG
+
+  BastionAccessEntry:
+    Type: AWS::EKS::AccessEntry
+    Properties:
+      ClusterName: !Ref ClusterName
+      PrincipalArn: !GetAtt SsmIamRole.Arn
+      Type: STANDARD
+      AccessPolicies:
+        - PolicyArn: arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy
+          AccessScope:
+            Type: cluster
+    DependsOn: EksCluster    
+# ------------------------------------------------------------------------------------------
+
+Outputs:
+  EksClusterName:
+    Description: EKS cluster name
+    Value: !Ref ClusterName
+    Export:
+      Name: mtier:EksClusterName
