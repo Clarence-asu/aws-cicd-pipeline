@@ -1,0 +1,100 @@
+AWSTemplateFormatVersion: '2010-09-09'    
+Description: EKS worker node stack
+
+Parameters:
+  EksNodeInstanceType:
+    Description: Instance type for worker nodes
+    Type: String
+    Default: t3.micro
+  PrivateSubnets:
+    Description: private subnets
+    Type: List<AWS::EC2::Subnet::Id>
+  VpcId:
+    Description: VPC ID 
+    Type: AWS::EC2::VPC::Id
+
+# -------------------------------------------------------------------------------------------------------------
+
+Resources:
+  NodeIamRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Description: IAM role for EKS worker nodes 
+      AssumeRolePolicyDocument: 
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ec2.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns: 
+          - arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy
+          - arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy
+          - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly
+
+  NodeGroup:
+    Type: 'AWS::EKS::Nodegroup'
+    Properties:
+      ClusterName: !ImportValue mtier:EksClusterName
+      NodeRole: !GetAtt NodeIamRole.Arn
+      InstanceTypes: 
+        - !Ref EksNodeInstanceType
+      ScalingConfig:
+        MinSize: 1
+        DesiredSize: 2
+        MaxSize: 4
+      Labels:
+        env: prod
+        role: worker
+        nodegroup: app-workers
+      Subnets: !Ref PrivateSubnets
+
+  NodeGroupSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Worker node group
+      VpcId: !Ref VpcId
+      SecurityGroupIngress: 
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          SourceSecurityGroupId: !Ref LoadBalancerSG
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0
+
+  LoadBalancerSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Service Manifest Loud Balncer  
+      VpcId: !Ref VpcId
+      SecurityGroupIngress: 
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+      SecurityGroupEgress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 10.0.0.0/16
+
+# ------------------------------------------------------------------------------------------
+
+Outputs:
+  NodeGroupName:
+    Description: Name of the node group
+    Value: !Ref NodeGroup
+    Export:
+      Name: mtier:NodeGroupName
+  NodeRoleArn:
+    Description: ARN of the Worker Node IAM Role
+    Value: !GetAtt NodeIamRole.Arn
+    Export:
+      Name: mtier:NodeRoleArn
+  LoadBalancerSGId:
+    Description: Load Balancer Security Group ID
+    Value: !Ref LoadBalancerSG
+    Export:
+      Name: mtier:LoadBalancerSGId
+
