@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-config
+  namespace: dev
+data:
+  nginx.conf: |
+    events {}
+
+    http {
+      server {
+        # port nginx listens on
+        listen 80;
+
+        # where nginx finds your html files inside the container
+        root /usr/share/nginx/html;
+
+        # the default file to serve
+        index index.html;
+
+        # handle all incoming requests
+        location / {
+        }
+      }
+    }
+  index.html: |
+    <!DOCTYPE html>
+    <html>
+      <body>
+        <h1>CI/CD Pipeline — Deployed Successfully</h1>
+      </body>
+    </html>
