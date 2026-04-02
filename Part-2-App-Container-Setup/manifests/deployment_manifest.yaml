@@ -17,7 +17,7 @@ spec:
         app: my-app
     spec:
       containers:
-      - image: nginx
+      - image: "ECR_URI_PLACEHOLDER"
         name: nginx
         ports:
         - containerPort: 80
