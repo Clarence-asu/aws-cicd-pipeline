@@ -23,6 +23,9 @@ Parameters:
   BastionSubnetId:
     Description: Subnet for the bastion host
     Type: AWS::EC2::Subnet::Id
+
+    
+
 # ----------------------------------------------------------------------------------------
 
 Resources:
