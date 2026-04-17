@@ -1,0 +1,31 @@
+AWSTemplateFormatVersion: '2010-09-09'    
+Description: ECR repository 
+
+Parameters:
+  EcrRepositoryName: 
+    Default: my-nginx-app
+    Description: Name of ecr repository
+    Type: String
+
+#------------------------------------------------------
+
+Resources:
+  MyRepository:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: !Ref EcrRepositoryName
+      ImageTagMutability: MUTABLE
+      EncryptionConfiguration: 
+        EncryptionType: AES256
+#------------------------------------------------------
+
+Outputs:
+  ErcRepository:
+    Description: CR repository URI
+    Value: !GetAtt MyRepository.RepositoryUri
+    Export:
+      Name: mtier:ErcRepository
+  EcrRepositoryArn:
+    Value: !GetAtt MyRepository.Arn
+    Export:
+      Name: mtier:EcrRepositoryArn

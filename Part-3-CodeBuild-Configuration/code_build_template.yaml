@@ -1,0 +1,83 @@
+AWSTemplateFormatVersion: '2010-09-09'    
+Description: IAM Role for CodeBuild
+
+Resource:
+  CodeBuildIamRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: mtier-codebuild-role
+      Description: Custom Iam Role allows SSM parameter store and EKS access
+      AssumeRolePolicyDocument: 
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: codebuild.amazonaws.com
+            Action: sts:AssumeRole 
+      Policies:
+        - PolicyName: codebuild-policy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ssm:GetParameters
+                  - ssm:GetParameter 
+                Resource: arn:aws:ssm:us-east-1:*:parameter/cicd-pipeline/aws-account-id
+        - PolicyName: ecr-policy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ecr:GetAuthorizationToken
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                  - ecr:BatchCheckLayerAvailability
+                  - ecr:PutImage
+                  - ecr:InitiateLayerUpload
+                  - ecr:UploadLayerPart
+                  - ecr:CompleteLayerUpload
+                Resource: !ImportValue mtier:EcrRepositoryArn
+        - PolicyName: eks-policy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - eks:DescribeCluster 
+                Resource: !ImportValue mtier:EksClusterArn
+        - PolicyName: cloudwatch-policy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: "*"
+      Tags: 
+        - Key: Name
+          Value: mtier-ssm-role
+  
+  
+  
+  
+  
+  CodeBuildProject:
+    Name: mtier-codebuild-project
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Description: Custom Iam Role allows SSM parameter store and EKS access
+      Artifacts: 
+        Type: CODEPIPELINE
+      Environment:
+        Type: LINUX_CONTAINER
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/standard:7.0
+      ServiceRole: !GetAtt CodeBuildIamRole.Arn
+      Source: 
+        Type: CODEPIPELINE
+        BuildSpec: buildspec.yml

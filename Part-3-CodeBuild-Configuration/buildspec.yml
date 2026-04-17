@@ -7,59 +7,21 @@ env:
     AWS_REGION: "us-east-1"
     ECR_REPO: "my-nginx-app"
     EKS_CLUSTER: "my-eks-cluster"
-    NAMESPACE: "nginx-app"
-    DEPLOYMENT: "nginx-deployment"
-    CONTAINER: "nginx"
-    ROLLOUT_TIMEOUT: "180s"
 
 phases:
   pre_build:
     commands:
-      # Authenticate Docker to ECR
-      - echo "Logging in to Amazon ECR..."
       - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
-
-      # Build deterministic image URI using commit SHA
-      - export IMAGE_URI=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO:$CODEBUILD_RESOLVED_SOURCE_VERSION
-      - echo "IMAGE_URI set to $IMAGE_URI"
-
+      - IMAGE_URI=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO:$CODEBUILD_RESOLVED_SOURCE_VERSION
+      
   build:
     commands:
-      - echo "Building Docker image..."
       - docker build -t $IMAGE_URI .
-
-      # Tag :latest for convenience but primary tag is the SHA
       - docker tag $IMAGE_URI $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO:latest
-      - echo "Build complete."
-
+        
   post_build:
     commands:
-      # Push both tags to ECR
-      - echo "Pushing image to ECR..."
       - docker push $IMAGE_URI
       - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO:latest
-
-      # Configure kubectl - fail explicitly if this doesn't work
-      - echo "Configuring kubectl for cluster $EKS_CLUSTER..."
-      - aws eks update-kubeconfig --region $AWS_REGION --name $EKS_CLUSTER || { echo "ERROR: Failed to configure kubeconfig"; exit 1; }
-
-      # Verify we can reach the cluster before deploying
-      - kubectl cluster-info || { echo "ERROR: Cannot reach EKS cluster"; exit 1; }
-
-      # Deploy new image
-      - echo "Deploying $IMAGE_URI to $DEPLOYMENT in namespace $NAMESPACE..."
-      - kubectl set image deployment/$DEPLOYMENT $CONTAINER=$IMAGE_URI -n $NAMESPACE
-
-      # Block until rollout completes - fails the build if pods don't come up healthy
-      - echo "Waiting for rollout to complete (timeout: $ROLLOUT_TIMEOUT)..."
-      - kubectl rollout status deployment/$DEPLOYMENT -n $NAMESPACE --timeout=$ROLLOUT_TIMEOUT || { echo "ERROR: Rollout failed. Check pod logs."; kubectl rollout undo deployment/$DEPLOYMENT -n $NAMESPACE; exit 1; }
-
-      # Summary log for traceability
-      - echo "=============================="
-      - echo "Deploy successful"
-      - echo "Image:      $IMAGE_URI"
-      - echo "Cluster:    $EKS_CLUSTER"
-      - echo "Namespace:  $NAMESPACE"
-      - echo "Deployment: $DEPLOYMENT"
-      - echo "Commit SHA: $CODEBUILD_RESOLVED_SOURCE_VERSION"
-      - echo "=============================="
+      - aws eks update-kubeconfig --region $AWS_REGION --name $EKS_CLUSTER
+      - kubectl set image deployment/nginx-deployment nginx=$IMAGE_URI -n nginx-app

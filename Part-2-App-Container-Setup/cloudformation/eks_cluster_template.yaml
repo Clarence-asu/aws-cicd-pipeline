@@ -160,3 +160,8 @@ Outputs:
     Value: !Ref ClusterName
     Export:
       Name: mtier:EksClusterName
+  EksClusterArn:
+    Description: EKS cluster ARN
+    Value: !GetAtt EksCluster.Arn
+    Export:
+      Name: mtier:EksClusterArn
