@@ -65,6 +65,14 @@ Resources:
                 Action:
                   - eks:DescribeCluster 
                 Resource: "*"
+        - PolicyName: mtier-cloudformation-listexports
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - cloudformation:ListExports
+                Resource: "*"
       Tags: 
         - Key: Name
           Value: mtier-ssm-role
