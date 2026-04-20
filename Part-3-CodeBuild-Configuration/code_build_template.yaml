@@ -67,9 +67,9 @@ Resource:
   
   
   CodeBuildProject:
-    Name: mtier-codebuild-project
     Type: AWS::CodeBuild::Project
     Properties:
+      Name: mtier-codebuild-project
       Description: Custom Iam Role allows SSM parameter store and EKS access
       Artifacts: 
         Type: CODEPIPELINE
