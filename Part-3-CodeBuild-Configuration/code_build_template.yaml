@@ -62,10 +62,6 @@ Resources:
         - Key: Name
           Value: mtier-ssm-role
   
-  
-  
-  
-  
   CodeBuildProject:
     Type: AWS::CodeBuild::Project
     Properties:
@@ -81,3 +77,11 @@ Resources:
       Source: 
         Type: CODEPIPELINE
         BuildSpec: buildspec.yml
+
+#----------------------------------------------------------------------------------------
+
+Outputs:
+  CodeBuildProjectArn:
+    Value: !GetAtt CodeBuildProject.Arn
+    Export:
+      mtier:CodeBuildProjectArn
