@@ -1,0 +1,80 @@
+AWSTemplateFormatVersion: '2010-09-09'    
+Description: IAM Role for Codepipeline
+
+Resources:
+  CodePipelineIamRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: mtier-codepipeline-role
+      Description: Custom Iam role that grant access to Amazon S3 (for artifacts)
+      AssumeRolePolicyDocument: 
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: codepipeline.amazonaws.com
+            Action: sts:AssumeRole 
+      Policies:
+        - PolicyName: codepipeline-policy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - codepipeline:GetPipeline
+                  - codepipeline:GetPipelineState
+                  - codepipeline:ListActionTypes
+                  - codepipeline:ListPipelines
+                  - codepipeline:PutJobFailureResult
+                  - codepipeline:PutJobSuccessResult
+                Resource: "*"
+        - PolicyName: s3-pipeline-policy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:PutObject
+                  - s3:GetObjectVersion
+                  - s3:GetBucketVersioning
+                Resource: !ImportValue PipelineArtifactsBucketArn
+        - PolicyName: codebuild-pipeline-policy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - codebuild:StartBuild
+                  - codebuild:BatchGetBuilds
+                Resource: !ImportValue CodeBuildProjectArn
+        
+  AppPipeline:
+    Type: AWS::CodePipeline::Pipeline
+    Properties:
+      Name: app-pipeline
+      ArtifactStore: 
+        Type: S3
+        Location:
+          !ImportValue mtier:PipelineArtifactsBucketName    
+      PipelineType: V2   
+      RoleArn: !GettAtt CodePipelineIamRole.Arn
+      Stages:
+        - Name: Source
+          Actions:
+            - Name: SourceAction
+              ActionTypeId:
+                Category: Source
+                Owner: ThirdParty
+                Provider: CodeStarSourceConnection
+                Version: "1"
+        - Name: Build
+          Actions:
+            - Name: BuildAction
+              ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Provider: CodeBuild
+                Version: "1"
+      Triggers:
+        - ProviderType: CodeStarSourceConnection

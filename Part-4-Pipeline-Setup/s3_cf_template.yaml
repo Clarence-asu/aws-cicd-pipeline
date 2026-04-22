@@ -1,0 +1,35 @@
+AWSTemplateFormatVersion: '2010-09-09'    
+Description: S3 bucket for pipeline artifacts
+
+Resources:
+  PipelineS3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketNamespace: account-regional
+      BucketName: pipeline-bucket-13579
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerEnforced
+      PublicAccessBlockConfiguration:
+          BlockPublicAcls: true
+          BlockPublicPolicy: true
+          IgnorePublicAcls: true
+          RestrictPublicBuckets: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256 
+      VersioningConfiguration:
+        Status: Enabled
+
+#---------------------------------------------------------------
+Outputs:
+  PipelineArtifactsBucketName:
+    Value: !Ref PipelineS3Bucket
+    Export:
+      Name: mtier:PipelineArtifactsBucketName
+
+  PipelineArtifactsBucketArn:
+    Value: !GetAtt PipelineS3Bucket.Arn
+    Export:
+      Name: mtier:PipelineArtifactsBucketArn
