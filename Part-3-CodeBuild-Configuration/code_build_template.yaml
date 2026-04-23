@@ -84,4 +84,4 @@ Outputs:
   CodeBuildProjectArn:
     Value: !GetAtt CodeBuildProject.Arn
     Export:
-      mtier:CodeBuildProjectArn
+      Name: mtier:CodeBuildProjectArn
