@@ -55,8 +55,7 @@ Resources:
       Name: app-pipeline
       ArtifactStore: 
         Type: S3
-        Location:
-          !ImportValue mtier:PipelineArtifactsBucketName 
+        Location: !ImportValue mtier:PipelineArtifactsBucketName
       PipelineType: V2   
       RoleArn: !GetAtt CodePipelineIamRole.Arn
       Stages:
@@ -68,6 +67,12 @@ Resources:
                 Owner: AWS
                 Provider: CodeStarSourceConnection
                 Version: "1"
+              Configuration:
+                ConnectionArn: arn:aws:codeconnections:us-east-1:339298461301:connection/648bb669-0fbd-473a-9fb2-52f49fede3ec
+                FullRepositoryId: Clarence-asu/aws-cicd-pipeline
+                BranchName: main
+              OutputArtifacts:
+                - Name: SourceOutput
         - Name: Build
           Actions:
             - Name: BuildAction
@@ -76,10 +81,10 @@ Resources:
                 Owner: AWS
                 Provider: CodeBuild
                 Version: "1"
-          Configuration:
-            ConnectionArn: arn:aws:codeconnections:us-east-1:339298461301:connection/648bb669-0fbd-473a-9fb2-52f49fede3ec
-            FullRepositoryId: Clarence-asu/aws-cicd-pipeline
-            BranchName: main
+              Configuration:
+                ProjectName: mtier-codebuild-project
+              InputArtifacts:
+                - Name: SourceOutput
       Triggers:
         - ProviderType: CodeStarSourceConnection
           GitConfiguration:
