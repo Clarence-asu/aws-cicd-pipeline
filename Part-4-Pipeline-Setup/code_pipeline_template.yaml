@@ -48,6 +48,14 @@ Resources:
                   - codebuild:StartBuild
                   - codebuild:BatchGetBuilds
                 Resource: !ImportValue mtier:CodeBuildProjectArn
+        - PolicyName: codestar-policy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - codestar-connections:UseConnection
+                Resource: arn:aws:codeconnections:us-east-1:339298461301:connection/648bb669-0fbd-473a-9fb2-52f49fede3ec
         
   AppPipeline:
     Type: AWS::CodePipeline::Pipeline
