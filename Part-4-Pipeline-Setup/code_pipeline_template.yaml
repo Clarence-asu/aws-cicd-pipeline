@@ -76,6 +76,10 @@ Resources:
                 Owner: AWS
                 Provider: CodeBuild
                 Version: "1"
+          Configuration:
+            ConnectionArn: arn:aws:codeconnections:us-east-1:339298461301:connection/648bb669-0fbd-473a-9fb2-52f49fede3ec
+            FullRepositoryId: Clarence-asu/aws-cicd-pipeline
+            BranchName: main
       Triggers:
         - ProviderType: CodeStarSourceConnection
           GitConfiguration:
