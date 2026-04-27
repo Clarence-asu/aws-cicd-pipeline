@@ -38,7 +38,7 @@ Resources:
                   - s3:PutObject
                   - s3:GetObjectVersion
                   - s3:GetBucketVersioning
-                Resource: !ImportValue PipelineArtifactsBucketArn
+                Resource: !ImportValue mtier:PipelineArtifactsBucketArn
         - PolicyName: codebuild-pipeline-policy
           PolicyDocument:
             Version: "2012-10-17"
@@ -47,7 +47,7 @@ Resources:
                 Action:
                   - codebuild:StartBuild
                   - codebuild:BatchGetBuilds
-                Resource: !ImportValue CodeBuildProjectArn
+                Resource: !ImportValue mtier:CodeBuildProjectArn
         
   AppPipeline:
     Type: AWS::CodePipeline::Pipeline
