@@ -58,7 +58,7 @@ Resources:
         Location:
           !ImportValue mtier:PipelineArtifactsBucketName    
       PipelineType: V2   
-      RoleArn: !GettAtt CodePipelineIamRole.Arn
+      RoleArn: !GetAtt CodePipelineIamRole.Arn
       Stages:
         - Name: Source
           Actions:
