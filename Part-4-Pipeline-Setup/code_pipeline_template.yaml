@@ -56,7 +56,7 @@ Resources:
       ArtifactStore: 
         Type: S3
         Location:
-          !ImportValue mtier:PipelineArtifactsBucketArn 
+          !ImportValue mtier:PipelineArtifactsBucketName 
       PipelineType: V2   
       RoleArn: !GetAtt CodePipelineIamRole.Arn
       Stages:
@@ -78,3 +78,9 @@ Resources:
                 Version: "1"
       Triggers:
         - ProviderType: CodeStarSourceConnection
+          GitConfiguration:
+            SourceActionName: SourceAction
+            Push:
+              - Branches:
+                  Includes:
+                    - main
