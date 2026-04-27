@@ -5,8 +5,8 @@ Resources:
   PipelineS3Bucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketNamespace: account-regional
-      BucketName: pipeline-bucket-13579
+      BucketNamespace: global
+      BucketName: pipeline-bucket-1593579731
       OwnershipControls:
         Rules:
           - ObjectOwnership: BucketOwnerEnforced
