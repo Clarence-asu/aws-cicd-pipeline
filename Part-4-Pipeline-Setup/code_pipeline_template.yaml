@@ -56,7 +56,7 @@ Resources:
       ArtifactStore: 
         Type: S3
         Location:
-          !ImportValue mtier:PipelineArtifactsBucketName    
+          !ImportValue mtier:PipelineArtifactsBucketArn 
       PipelineType: V2   
       RoleArn: !GetAtt CodePipelineIamRole.Arn
       Stages:
