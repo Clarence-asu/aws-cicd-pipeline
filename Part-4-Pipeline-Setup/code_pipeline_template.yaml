@@ -65,7 +65,7 @@ Resources:
             - Name: SourceAction
               ActionTypeId:
                 Category: Source
-                Owner: ThirdParty
+                Owner: AWS
                 Provider: CodeStarSourceConnection
                 Version: "1"
         - Name: Build
