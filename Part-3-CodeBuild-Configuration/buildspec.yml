@@ -16,7 +16,7 @@ phases:
       
   build:
     commands:
-      - docker build -t $IMAGE_URI .
+      - docker build -t $IMAGE_URI Part-2-App-Container-Setup/apps/
       - docker tag $IMAGE_URI $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO:latest
         
   post_build:
