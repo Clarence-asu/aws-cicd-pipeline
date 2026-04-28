@@ -91,7 +91,7 @@ Resources:
       ServiceRole: !GetAtt CodeBuildIamRole.Arn
       Source: 
         Type: CODEPIPELINE
-        BuildSpec: buildspec.yml
+        BuildSpec: Part-3-CodeBuild-Configuration/buildspec.yml
 
 #----------------------------------------------------------------------------------------
 
