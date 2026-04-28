@@ -38,7 +38,11 @@ Resources:
                   - s3:PutObject
                   - s3:GetObjectVersion
                   - s3:GetBucketVersioning
-                Resource: !ImportValue mtier:PipelineArtifactsBucketArn
+                Resource: 
+                  - !ImportValue mtier:PipelineArtifactsBucketArn
+                  - !Sub
+                    - "${BucketArn}/*"
+                    - BucketArn: !ImportValue mtier:PipelineArtifactsBucketArn
         - PolicyName: codebuild-pipeline-policy
           PolicyDocument:
             Version: "2012-10-17"
