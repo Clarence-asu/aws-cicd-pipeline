@@ -26,4 +26,4 @@ phases:
       - aws eks update-kubeconfig --region $AWS_REGION --name $EKS_CLUSTER
       - chmod +x Part-2-App-Container-Setup/scripts/deploy.sh
       - Part-2-App-Container-Setup/scripts/deploy.sh
-      - kubectl set image deployment/nginx-deployment nginx=$IMAGE_URI -n dev
+      - kubectl set image deployment/my-app nginx=$IMAGE_URI -n dev
