@@ -156,18 +156,6 @@ Resources:
             Type: cluster
     DependsOn: EksCluster
 
-  CodeBuildAccessEntry:
-    Type: AWS::EKS::AccessEntry
-    Properties:
-      ClusterName: !Ref ClusterName
-      PrincipalArn: arn:aws:iam::339298461301:role/mtier-codebuild-role
-      Type: STANDARD
-      AccessPolicies:
-        - PolicyArn: arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy
-          AccessScope:
-            Type: cluster
-    DependsOn: EksCluster
-
 # ------------------------------------------------------------------------------------------
 
 Outputs:
