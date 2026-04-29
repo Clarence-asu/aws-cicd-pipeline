@@ -24,8 +24,6 @@ Parameters:
     Description: Subnet for the bastion host
     Type: AWS::EC2::Subnet::Id
 
-    
-
 # ----------------------------------------------------------------------------------------
 
 Resources:
@@ -34,10 +32,10 @@ Resources:
     Properties:
       GroupDescription: SSM Bastion host (no inbound; outbound via NAT)
       VpcId: !Ref VpcId
-      SecurityGroupIngress: [] # no inbound traffic
+      SecurityGroupIngress: []
       SecurityGroupEgress:
       - IpProtocol: -1
-        CidrIp: 0.0.0.0/0   # allow all outbound traffic via NAT
+        CidrIp: 0.0.0.0/0
       Tags:
         - Key: Name
           Value: ssm-bastion-sg
@@ -99,7 +97,6 @@ Resources:
         Fn::Base64: !Sub |
           #!/bin/bash
           set -e
-          # Install kubectl (latest stable)
           curl -LO https://dl.k8s.io/release/$(curl -Ls https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl
           install -m 0755 kubectl /usr/local/bin/kubectl
           rm -f kubectl
@@ -118,36 +115,34 @@ Resources:
         - IpProtocol: -1
           CidrIp: !ImportValue mtier:VpcCidr
 
-
-
   EksIamRole:
-      Type: AWS::IAM::Role
-      Properties:
-        RoleName: eks-role
-        Description: IAM role for EKS control plane 
-        AssumeRolePolicyDocument: 
-          Version: "2012-10-17"
-          Statement:
-            - Effect: Allow
-              Principal:
-                Service: eks.amazonaws.com
-              Action: sts:AssumeRole
-        Path: "/"
-        ManagedPolicyArns: 
-            - arn:aws:iam::aws:policy/AmazonEKSClusterPolicy
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: eks-role
+      Description: IAM role for EKS control plane 
+      AssumeRolePolicyDocument: 
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: eks.amazonaws.com
+            Action: sts:AssumeRole
+      Path: "/"
+      ManagedPolicyArns: 
+        - arn:aws:iam::aws:policy/AmazonEKSClusterPolicy
 
   EksCluster:
-      Type: AWS::EKS::Cluster
-      Properties:
-        Name: !Ref ClusterName
-        Version: !Ref ClusterVersion
-        RoleArn: !GetAtt EksIamRole.Arn
-        AccessConfig:
-            AuthenticationMode: API_AND_CONFIG_MAP
-        ResourcesVpcConfig:
-          SubnetIds: !Ref PrivateSubnets
-          SecurityGroupIds:
-            - !Ref EksClusterSG
+    Type: AWS::EKS::Cluster
+    Properties:
+      Name: !Ref ClusterName
+      Version: !Ref ClusterVersion
+      RoleArn: !GetAtt EksIamRole.Arn
+      AccessConfig:
+        AuthenticationMode: API_AND_CONFIG_MAP
+      ResourcesVpcConfig:
+        SubnetIds: !Ref PrivateSubnets
+        SecurityGroupIds:
+          - !Ref EksClusterSG
 
   BastionAccessEntry:
     Type: AWS::EKS::AccessEntry
@@ -159,7 +154,20 @@ Resources:
         - PolicyArn: arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy
           AccessScope:
             Type: cluster
-    DependsOn: EksCluster    
+    DependsOn: EksCluster
+
+  CodeBuildAccessEntry:
+    Type: AWS::EKS::AccessEntry
+    Properties:
+      ClusterName: !Ref ClusterName
+      PrincipalArn: arn:aws:iam::339298461301:role/mtier-codebuild-role
+      Type: STANDARD
+      AccessPolicies:
+        - PolicyArn: arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy
+          AccessScope:
+            Type: cluster
+    DependsOn: EksCluster
+
 # ------------------------------------------------------------------------------------------
 
 Outputs:
