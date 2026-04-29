@@ -93,6 +93,17 @@ Resources:
         Type: CODEPIPELINE
         BuildSpec: Part-3-CodeBuild-Configuration/buildspec.yml
 
+  CodeBuildAccessEntry:
+    Type: AWS::EKS::AccessEntry
+    Properties:
+      ClusterName: !ImportValue mtier:EksClusterName
+      PrincipalArn: !GetAtt CodeBuildIamRole.Arn
+      Type: STANDARD
+      AccessPolicies:
+        - PolicyArn: arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy
+          AccessScope:
+            Type: cluster
+
 #----------------------------------------------------------------------------------------
 
 Outputs:
