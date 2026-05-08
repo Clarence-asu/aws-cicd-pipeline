@@ -1,0 +1,26 @@
+AWSTemplateFormatVersion: '2010-09-09'    
+Description: Captures build and deployment logs
+
+Resources:
+  MtierPipelineTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: "MtierTopic"
+      FifoTopic: False
+      
+  
+  MtierPipelineSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      Protocol: email
+      Endpoint: clarenceasu@gmail.com
+      TopicArn: !Ref MtierPipelineTopic
+
+
+#---------------------------------------------------------------
+Outputs:
+ 
+  PipelineNotificationsArn:
+    Value: !GetAtt MtierPipelineTopic.Arn
+    Export:
+      Name: mtier:PipelineNotificationsArn

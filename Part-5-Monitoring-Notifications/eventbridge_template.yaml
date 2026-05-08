@@ -1,0 +1,26 @@
+AWSTemplateFormatVersion: '2010-09-09'    
+Description: IAM Role for Codepipeline
+
+Resources:
+  MtierEventRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: This Rule invokes the MtierLambdaFunction
+      Name: mtier-event-rule
+      EventPattern: 
+        source:
+          - "aws.codepipeline"
+        detail-type:
+          - "CodePipeline Pipeline Execution State Change"
+      State: ENABLED
+      Targets:
+        - Id: MtierLambdaTarget
+          Arn: !ImportValue mtier:LambdaFunctionArn
+
+  LambdaInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !ImportValue mtier:LambdaFunctionArn
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt MtierEventRule.Arn 

@@ -1,0 +1,19 @@
+AWSTemplateFormatVersion: '2010-09-09'    
+Description: Captures build and deployment logs
+
+Resources:
+    BuildDeployLogs:
+        Type: AWS::Logs::LogGroup
+        Properties:
+          LogGroupName: mtier-Logroup
+          RetentionInDays: 30
+          LogGroupClass: STANDARD 
+          DeletionProtectionEnabled: true
+
+#---------------------------------------------------------------
+Outputs:
+ 
+  BuildDeployLogsArn:
+    Value: !GetAtt BuildDeployLogs.Arn
+    Export:
+      Name: mtier:BuildDeployLogsArn

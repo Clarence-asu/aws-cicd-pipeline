@@ -1,0 +1,82 @@
+AWSTemplateFormatVersion: '2010-09-09'    
+Description: IAM Role for Codepipeline
+
+Resources:
+  MtierSnsCloudwatchLambdaIamRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: mtier-Sns-Cloudwatch-Lambda-role
+      Description: Custom Iam role that grant access to SNS and Cloudwatch
+      AssumeRolePolicyDocument: 
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole 
+      Policies:
+        - PolicyName: mtier-sns-policy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - sns:Publish
+                Resource: !ImportValue mtier:PipelineNotificationsArn
+        - PolicyName: mtier-cloudwatch-policy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: !ImportValue mtier:BuildDeployLogsArn
+
+  MtierLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Description: Lambda funtion publishes to SNS and creates logs in cloudwatch log group
+      FunctionName: mtier-lamda-function
+      Runtime: python3.12
+      Handler: index.lambda_handler
+      Architectures: x86_64
+      Role: !Ref MtierSnsCloudwatchLambdaIamRole
+      Environment:
+        Variables:
+          SNS_TOPIC_ARN: !ImportValue mtier:PipelineNotificationsArn
+      Code: 
+        ZipFile: |
+          import boto3
+          import os
+
+          client = boto3.client('sns')
+          topic_arn = os.environ['SNS_TOPIC_ARN']
+
+          def lambda_handler(event, context):
+              pipeline_name = event['detail']['pipeline']
+              pipeline_state = event['detail']['state']
+              client.publish(
+                  TopicArn=topic_arn,
+                  Message=pipeline_name + " is " + pipeline_state,
+                  Subject='Pipeline Notification'
+              )
+
+---------------------------------------------------------------
+Outputs:
+  LambdaFunctionArn:
+    Value: !GetAtt MtierLambdaFunction.Arn
+    Export:
+      Name: mtier:LambdaFunctionArn
+
+Outputs:
+  LambdaFunction:
+    Value: !Ref MtierLambdaFunction
+    Export:
+      Name: mtier:LambdaFunction
+ 
+
+
+
+
