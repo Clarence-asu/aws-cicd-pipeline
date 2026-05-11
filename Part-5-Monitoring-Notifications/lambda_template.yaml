@@ -69,13 +69,8 @@ Outputs:
     Value: !GetAtt MtierLambdaFunction.Arn
     Export:
       Name: mtier:LambdaFunctionArn
-      
+
   LambdaFunction:
     Value: !Ref MtierLambdaFunction
     Export:
       Name: mtier:LambdaFunction
- 
-
-
-
-
