@@ -41,7 +41,7 @@ Resources:
       FunctionName: mtier-lamda-function
       Runtime: python3.12
       Handler: index.lambda_handler
-      Architectures: 
+      Architectures:
         - x86_64
       Role: !Ref MtierSnsCloudwatchLambdaIamRole
       Environment:
