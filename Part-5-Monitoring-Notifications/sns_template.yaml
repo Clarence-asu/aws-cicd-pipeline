@@ -21,6 +21,6 @@ Resources:
 Outputs:
  
   PipelineNotificationsArn:
-    Value: !GetAtt MtierPipelineTopic.Arn
+    Value: !Ref MtierPipelineTopic.Arn
     Export:
       Name: mtier:PipelineNotificationsArn
