@@ -43,7 +43,7 @@ Resources:
       Handler: index.lambda_handler
       Architectures:
         - x86_64
-      Role: !GetAtt MtierSnsCloudwatchLambdaIamRole
+      Role: !GetAtt MtierSnsCloudwatchLambdaIamRole.Arn
       Environment:
         Variables:
           SNS_TOPIC_ARN: !ImportValue mtier:PipelineNotificationsArn
