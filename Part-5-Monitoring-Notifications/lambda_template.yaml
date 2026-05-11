@@ -63,8 +63,9 @@ Resources:
                   Subject='Pipeline Notification'
               )
 
----------------------------------------------------------------
+#--------------------------------------------------------------
 Outputs:
+
   LambdaFunctionArn:
     Value: !GetAtt MtierLambdaFunction.Arn
     Export:
