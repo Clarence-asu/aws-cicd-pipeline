@@ -103,7 +103,7 @@ Resources:
                 Version: "1"
               Configuration:
                 ProjectName: mtier-codebuild-project
-                BuildspecOverride: Part-3-CodeBuild-Configuration/buildspec-build.yml
+                BuildspecOverride: Part-3-CodeBuild-Configuration/buildspec_build.yml
               InputArtifacts:
                 - Name: SourceOutput
         - Name: Approve
