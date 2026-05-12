@@ -1,0 +1,26 @@
+version: 0.2
+
+env:
+  parameter-store:
+    AWS_ACCOUNT_ID: /cicd-pipeline/aws-account-id
+  variables:
+    AWS_REGION: "us-east-1"
+    ECR_REPO: "my-nginx-app"
+    EKS_CLUSTER: "my-eks-cluster"
+
+phases:
+  pre_build:
+    commands:
+      - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
+      - IMAGE_URI=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO:$CODEBUILD_RESOLVED_SOURCE_VERSION
+      
+  build:
+    commands:
+      - docker build -t $IMAGE_URI Part-2-App-Container-Setup/apps/
+      - docker tag $IMAGE_URI $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO:latest
+        
+  post_build:
+    commands:
+      - docker push $IMAGE_URI
+      - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO:latest
+      
