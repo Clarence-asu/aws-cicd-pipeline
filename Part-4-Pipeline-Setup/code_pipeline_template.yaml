@@ -60,7 +60,15 @@ Resources:
                 Action:
                   - codestar-connections:UseConnection
                 Resource: arn:aws:codeconnections:us-east-1:339298461301:connection/648bb669-0fbd-473a-9fb2-52f49fede3ec
-        
+        - PolicyName: sns-approval-policy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - sns:Publish
+                Resource: !ImportValue mtier:PipelineNotificationsArn
+
   AppPipeline:
     Type: AWS::CodePipeline::Pipeline
     Properties:
@@ -95,6 +103,31 @@ Resources:
                 Version: "1"
               Configuration:
                 ProjectName: mtier-codebuild-project
+                BuildspecOverride: Part-3-CodeBuild-Configuration/buildspec-build.yml
+              InputArtifacts:
+                - Name: SourceOutput
+        - Name: Approve
+          Actions:
+            - Name: ManualApproval
+              ActionTypeId:
+                Category: Approval
+                Owner: AWS
+                Provider: Manual
+                Version: "1"
+              Configuration:
+                NotificationArn: !ImportValue mtier:PipelineNotificationsArn
+                CustomData: "Review the build and approve to deploy to EKS"
+        - Name: Deploy
+          Actions:
+            - Name: DeployAction
+              ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Provider: CodeBuild
+                Version: "1"
+              Configuration:
+                ProjectName: mtier-codebuild-project
+                BuildspecOverride: Part-3-CodeBuild-Configuration/buildspec-deploy.yml
               InputArtifacts:
                 - Name: SourceOutput
       Triggers:
