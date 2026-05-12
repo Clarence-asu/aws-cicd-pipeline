@@ -127,7 +127,7 @@ Resources:
                 Version: "1"
               Configuration:
                 ProjectName: mtier-codebuild-project
-                BuildspecOverride: Part-3-CodeBuild-Configuration/buildspec-deploy.yml
+                BuildspecOverride: Part-3-CodeBuild-Configuration/buildspec_deploy.yml
               InputArtifacts:
                 - Name: SourceOutput
       Triggers:
