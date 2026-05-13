@@ -1,3 +1,7 @@
+Here's the updated README ready to paste into GitHub:
+
+---
+
 # Part 2 — Application & Container Setup
 
 This milestone covers everything needed to containerize the nginx web application and prepare it for deployment to the EKS cluster. It includes the Kubernetes manifests, a custom nginx configuration, a Dockerfile, an ECR repository for storing the Docker image, security group setup for the load balancer and worker nodes, and an automation script that ties everything together at deploy time.
@@ -47,6 +51,9 @@ A separate CloudFormation template `ecr_repository_template.yaml` was created to
 
 This script ensures that no values are hardcoded anywhere in the manifests. Every deploy pulls fresh values directly from the infrastructure.
 
+### .gitattributes
+A `.gitattributes` file was added to the root of the repo to enforce LF line endings across all files. Without this, Windows machines push CRLF line endings which break bash scripts and YAML files when they run inside Linux-based CodeBuild containers. Adding `* text=auto eol=lf` ensures consistent line endings regardless of the developer's OS.
+
 ---
 
 ## CloudFormation Changes to Existing Templates
@@ -65,15 +72,19 @@ This script ensures that no values are hardcoded anywhere in the manifests. Ever
 ## Deploy Order
 
 ```
-1. Deploy VPC stack
-2. Deploy EKS cluster stack
-3. Deploy worker node stack
-4. Deploy ECR repository stack
-5. Connect to bastion via SSM
-6. Clone the GitHub repo on the bastion
-7. Run deploy.sh
-8. Script injects SG ID and ECR URI into manifests
-9. Script applies all manifests to the cluster
+1.  Part 1 - Network Stack          ← deploy first
+2.  Part 2 - EKS Cluster Stack      ← needs VpcId and PrivateSubnets
+3.  Part 2 - Worker Node Stack      ← needs PrivateSubnets
+4.  Part 2 - ECR Repository Stack
+5.  Part 4 - S3 Artifacts Stack
+6.  Part 3 - CodeBuild Stack
+7.  Part 5 - CloudWatch Stack
+8.  Part 5 - SNS Stack              ← must come before CodePipeline
+9.  Part 4 - CodePipeline Stack     ← imports SNS export
+10. Part 5 - Lambda Stack
+11. Part 5 - EventBridge Stack
+12. Connect to bastion via SSM
+13. Run deploy.sh to inject values and apply manifests
 ```
 
 ---
@@ -81,14 +92,18 @@ This script ensures that no values are hardcoded anywhere in the manifests. Ever
 ## Teardown Order
 
 ```
-1. kubectl delete -f service_lb_manifest.yaml
-2. kubectl delete -f deployment_manifest.yaml
-3. kubectl delete -f configmap_manifest.yaml
-4. kubectl delete -f namespace_manifest.yaml
-5. Delete ECR stack
-6. Delete worker node stack
-7. Delete EKS stack
-8. Delete VPC stack
+1.  kubectl delete namespace dev    ← removes all resources in the namespace
+2.  Delete EventBridge stack
+3.  Delete Lambda stack
+4.  Delete SNS stack
+5.  Delete CloudWatch stack
+6.  Delete CodePipeline stack
+7.  Delete CodeBuild stack
+8.  Delete S3 stack                 ← empty bucket first
+9.  Delete ECR stack                ← delete images first
+10. Delete Worker Node stack
+11. Delete EKS Cluster stack
+12. Delete VPC stack
 ```
 
 ---

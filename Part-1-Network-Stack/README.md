@@ -1,3 +1,7 @@
+Here's the README formatted and ready to copy directly into GitHub:
+
+---
+
 # Part 1 — Network Stack
 
 I built this VPC template as part of my [AWS EKS Infrastructure project](https://github.com/Clarence-asu/AWS-EKS-Project) and carried it over to this one. No reason to rebuild it from scratch when the foundation already works. This is the first stack that gets deployed and everything else in the project sits on top of it.
@@ -58,13 +62,20 @@ The template exports everything the downstream stacks need so nothing gets hardc
 
 ## Deploy Order
 
-This goes first. The EKS and worker node stacks both import values from here so they will fail if this isn't already deployed.
+This goes first. Every stack in the project directly or indirectly depends on the VPC being in place.
 
 ```
-Part 1 - Network Stack         ← deploy first
-Part 2 - EKS Cluster Stack     ← needs VpcId and PrivateSubnets
-Part 3 - Worker Node Stack     ← needs PrivateSubnets
-Part 4 - CI/CD Pipeline        ← builds on top of all of this
+1.  Part 1 - Network Stack          ← deploy first
+2.  Part 2 - EKS Cluster Stack      ← needs VpcId and PrivateSubnets
+3.  Part 2 - Worker Node Stack      ← needs PrivateSubnets
+4.  Part 2 - ECR Repository Stack
+5.  Part 4 - S3 Artifacts Stack
+6.  Part 3 - CodeBuild Stack
+7.  Part 5 - CloudWatch Stack
+8.  Part 5 - SNS Stack              ← must come before CodePipeline
+9.  Part 4 - CodePipeline Stack     ← imports SNS export
+10. Part 5 - Lambda Stack
+11. Part 5 - EventBridge Stack
 ```
 
 ---
